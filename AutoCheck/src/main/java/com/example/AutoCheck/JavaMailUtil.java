@@ -1,5 +1,9 @@
 package com.example.AutoCheck;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -9,6 +13,9 @@ import java.util.logging.Logger;
 
 public class JavaMailUtil
 {
+
+    @Autowired
+    private static JavaMailSender mailSender;
     public static void sendMail(String recepient) throws MessagingException
     {
         System.out.println("Preparing to send email");
@@ -47,8 +54,19 @@ public class JavaMailUtil
             message.setRecipient(Message.RecipientType.TO,new InternetAddress(recepient));
             message.setSubject("The health status of demo application");
             AutoCheckController obj = new AutoCheckController();
-            String answer = obj.getEndpoint();
-            message.setText(answer);
+            try {
+                String answer = obj.getEndpoint();
+                SimpleMailMessage m = new SimpleMailMessage();
+                m.setTo(recepient);
+                m.setSubject("The health status of demo application");
+                m.setText(answer);
+                mailSender.send(m);
+                message.setText(answer);
+            }
+            catch (Exception e) {
+                message.setText("ERROR 400");
+                return message;
+            }
             return message;
         }
         catch(Exception ex)
